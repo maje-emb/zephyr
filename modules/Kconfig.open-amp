@@ -28,4 +28,10 @@ config OPENAMP_SLAVE
 	help
 	  This option enables support for OpenAMP VirtIO Slave
 
+config OPENAMP_RPMSG_BUFFER_SIZE
+	int "RPMsg Buffer Size"
+	default 512
+	help
+	  This option specifies the size of the message buffer
+
 endif # OPENAMP
