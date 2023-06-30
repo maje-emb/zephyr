@@ -14,6 +14,9 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/hci.h>
 
+#include "net_core_monitor.h"
+#include <helpers/nrfx_reset_reason.h>
+
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
 
@@ -74,9 +77,15 @@ static void bt_ready(int err)
 	printk("Beacon started, advertising as %s\n", addr_s);
 }
 
+static void print_reset_reason(void)
+{
+	uint32_t reas = nrfx_reset_reason_get();
+	printk("Reset reason: 0x%04x\n", reas);
+}
+
 int main(void)
 {
-	int err;
+	int err, ret;
 
 	printk("Starting Beacon Demo\n");
 
@@ -84,6 +93,17 @@ int main(void)
 	err = bt_enable(bt_ready);
 	if (err) {
 		printk("Bluetooth init failed (err %d)\n", err);
+		return 0;
 	}
-	return 0;
+
+	for (;;) {
+		ret = ncm_net_status_check();
+		printk("Return status %d\n", ret);
+		if (ret == -EBUSY) {
+			/* do something*/
+		} else if (ret == -EFAULT) {
+			print_reset_reason();
+		}
+		k_sleep(K_MSEC(1000));
+	}
 }
